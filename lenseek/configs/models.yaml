@@ -1,0 +1,53 @@
+# Released LEN-Seek checkpoints. lenseek.checkpoint recognises a checkpoint file by its SHA-256 and applies the model
+# settings listed here; download locations are in lenseek/configs/assets.yaml (key = `asset`).
+#
+# Every checkpoint is the state after a fixed 200 epochs; training has no validation step, so no epoch was chosen
+# with quantities of the evaluation data. Run settings are in data/runs.yaml.
+
+main_s0:
+  description: >-
+    Original model. Rotation-invariant edge features (direction expressed in the residue frame, paper eq. 10) and a
+    Kabsch-superposed RMSD loss. Trained on all 114,661 BsitePDB training sites, seed 0.
+  asset: checkpoint_main_s0
+  db_asset: latentdb_main_s0                 # released latent database encoded with this checkpoint
+  db_patch_asset: latentdb_main_s0_standard  # applied for the standard edition (lenseek-search default)
+  sha256: 392d113bca4309e9ac2044cd0b186c682318fc22c2e397b5a5b74b66f034b290
+  epoch: 200
+  model: {}            # = lenseek.config.ModelConfig defaults
+  default: true
+
+main_s1:
+  description: >-
+    The main-model recipe trained with seed 1 (same data and settings as main_s0).
+  asset: checkpoint_main_s1
+  sha256: 2c009f9017e395429582536589edb81641f6870d29b21d5019f039a60fbff4fe
+  epoch: 200
+  model: {}
+
+main_s2:
+  description: >-
+    The main-model recipe trained with seed 2 (same data and settings as main_s0).
+  asset: checkpoint_main_s2
+  sha256: acd4ae48088e739880aa2d675dc9baa2a93f5d62602168c532a5c03c93d8e70e
+  epoch: 200
+  model: {}
+
+strict30_s0:
+  description: >-
+    Same code and settings as main_s0, trained on the 101,977 training sites that share less than 30 % sequence
+    identity with every evaluation protein (5,963 PDB entries removed). For analyses of generalisation away from
+    close homologues of the training set.
+  asset: checkpoint_strict30_s0
+  sha256: 1cedc0d07ad32f845c9f7a74adfecc294c60693e837972f57dbdedb8b00e8da3
+  epoch: 200
+  model: {}
+
+v1.0:
+  description: >-
+    Model of the bioRxiv preprint (v1); the v2.0 model supersedes it.
+  asset: checkpoint_v1_0
+  sha256: 8264cbee9c0a667c95a7ddb2d4543a9d4b814c8e272cad668ba2da62bb7e3555
+  epoch: 200
+  model:
+    direction_frame: global
+  superseded: true

@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lenseek"
+version = "2.0.0"
+description = "LEN-Seek: ligand binding-site similarity search in the latent space of an SE(3)-invariant graph VAE"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+authors = [
+  { name = "Kyunghwan Yeo" },
+  { name = "Dongwoo Kim" },
+  { name = "Jaemin Sim" },
+  { name = "Juyong Lee", email = "nicole23@snu.ac.kr" },
+]
+keywords = ["binding site", "protein-ligand", "similarity search", "variational autoencoder", "graph neural network"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+# The exact versions the released models were trained and evaluated with are pinned in environment.yml;
+# the ranges below are what the package itself needs.
+dependencies = [
+  "torch>=2.1",
+  "numpy>=1.24",
+  "pyyaml>=6",
+  "tqdm",
+]
+
+[project.optional-dependencies]
+ankh = ["transformers>=4.40,<5", "sentencepiece", "huggingface_hub>=0.23"]   # lenseek-embed, --embed
+train = ["accelerate>=0.30"]                                                 # lenseek-train
+analysis = ["pandas", "scipy", "scikit-learn==1.9.1", "matplotlib", "seaborn", "rdkit", "faiss-cpu", "gemmi"]
+pocket = ["gemmi", "rdkit", "scipy"]                                         # lenseek.pocket, scripts/search_ligand.py
+test = ["pytest>=7"]
+notebook = ["jupyter", "nbconvert", "nbformat", "ipykernel", "pandas", "matplotlib"]
+all = ["lenseek[ankh,train,analysis,pocket,test,notebook]"]
+
+[project.scripts]
+lenseek-embed = "lenseek.cli.embed:main"
+lenseek-featurize = "lenseek.cli.featurize:main"
+lenseek-build-db = "lenseek.cli.build_db:main"
+lenseek-search = "lenseek.cli.search:main"
+lenseek-train = "lenseek.cli.train:main"
+lenseek-fetch = "lenseek.cli.fetch:main"
+
+[project.urls]
+Repository = "https://github.com/ding-oh/LEN-Seek"
+Preprint = "https://doi.org/10.64898/2026.08.14.744759"
+
+[tool.setuptools]
+packages = ["lenseek", "lenseek.io", "lenseek.cli"]
+
+[tool.setuptools.package-data]
+lenseek = ["configs/*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+  "assets: needs released assets (checkpoint) present locally or via LENSEEK_ASSET_MIRROR",
+  "slow: takes more than a few seconds on CPU",
+]

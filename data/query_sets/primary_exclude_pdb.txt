@@ -1,0 +1,11 @@
+# evaluation proteins with max fident >= 0.8 at qcov >= 0.8 vs training (source eval_vs_train.m8); excluded from the primary query set
+7y94	# 0.813
+8b50	# 0.834
+8b52	# 0.854
+8jwz	# 0.995
+8jya	# 0.801
+8owm	# 0.806
+8q61	# 0.832
+8tfp	# 0.886
+8u2w	# 0.820
+8u93	# 0.873

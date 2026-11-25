@@ -1,0 +1,48 @@
+{
+ "queries": [
+  {
+   "site": "7uad/ligand_pocket_1_A",
+   "residues": 22,
+   "chains": [
+    "A"
+   ],
+   "ankh_max_abs_difference": {
+    "A": 4.76837158203125e-07
+   }
+  },
+  {
+   "site": "8aga/ligand_pocket_1_A",
+   "residues": 12,
+   "chains": [
+    "A"
+   ],
+   "ankh_max_abs_difference": {
+    "A": 3.8743019104003906e-07
+   }
+  },
+  {
+   "site": "8h43/ligand_pocket_1_AB",
+   "residues": 14,
+   "chains": [
+    "A",
+    "B"
+   ],
+   "ankh_max_abs_difference": {
+    "A": 2.8312206268310547e-07,
+    "B": 3.5762786865234375e-07
+   }
+  },
+  {
+   "site": "8ho6/ligand_pocket_1_A",
+   "residues": 29,
+   "chains": [
+    "A"
+   ],
+   "ankh_max_abs_difference": {
+    "A": 4.172325134277344e-07
+   }
+  }
+ ],
+ "db_sites": 500,
+ "db_from_neighbours": 198
+}

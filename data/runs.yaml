@@ -1,0 +1,89 @@
+# Training runs of the paper: the main-model recipe once, then every run as its differences from it.
+#
+#   lenseek-train --run <name> [--data <training features>]      or      examples/train.sh <name> [<training features>]
+#
+# A run is the recipe with the run's keys merged in: `model` and `train` key by key, `data` and `exclude_entries`
+# replaced. Keys are those of a single-run YAML (lenseek-train --config <file>): data, exclude_entries, model
+# (lenseek.config.ModelConfig), train (lenseek.config.TrainConfig); anything not given is a lenseek.config default.
+# `data` expands environment variables ($LENSEEK_HOME defaults to ~/.cache/lenseek); `exclude_entries` is a path
+# relative to this file.
+#
+# The recipe (main_s0): 200 epochs, AdamW 1e-3 -> 1e-4, KL warm-up from epoch 50 to beta 0.5 at epoch 125, free bits
+# 12, loss weights KL 1 / MSE 1 / Cos 40 / Norm 4 / FAPE 20 / RMSD 5, C-alpha 15-NN graph. The global batch is 512 =
+# batch_size x GPUs x grad_accum: 16 x 2 x 16 in the recipe, 32 x 1 x 16 in the runs with batch_size 32 (one GPU),
+# 32 x 2 x 8 in the runs with grad_accum 8 (LENSEEK_BATCH / LENSEEK_ACCUM override them on the command line).
+# Every run stops after 200 epochs and keeps the last state (final.pth).
+
+recipe:
+  data: ${LENSEEK_HOME}/assets/train_features   # feature store (lenseek-featurize) or the training pickle
+  model: {}
+  train: {batch_size: 16, grad_accum: 16, epochs: 200, seed: 0}
+
+runs:
+  # ---- original model, three seeds (released checkpoints main_s0, main_s1, main_s2)
+  main_s0: {}
+  main_s1: {train: {seed: 1}}
+  main_s2: {train: {seed: 2}}
+
+  # ---- trained without homologous entries: the training sites of PDB entries with >= 30 % (strict50_s0: >= 50 %)
+  # sequence identity, one-sided coverage >= 0.5, to any evaluation protein, or without a sequence, are left out: 5,963
+  # entries, 101,977 sites remain (strict50_s0: 1,502 entries, 111,255 sites). strict30_s0 is a released checkpoint.
+  strict30_s0: {exclude_entries: strict30_exclude_entries.txt}
+  strict50_s0: {exclude_entries: strict50_exclude_entries.txt}
+
+  # ---- variants
+  abl_nodir: {model: {edge_drop: [dir]}}          # direction channel of the edge features set to zero
+  abl_norbf: {model: {edge_drop: [rbf]}}          # distance channel (32 RBF features) set to zero
+  abl_noquat: {model: {edge_drop: [quat]}}        # relative-orientation channel (4 quaternion features) set to zero
+  # No geometric edge features (RBF, direction and quaternion channels zero), FAPE and RMSD losses off. abl_ankh_only
+  # keeps the C-alpha 15-NN attention graph, so the spatial neighbourhood stays visible ('no geometric edge features
+  # (contact graph only)'); the fullgraph runs attend over all residue pairs and receive no 3-D information.
+  abl_ankh_only: {model: {edge_drop: [rbf, dir, quat]}, train: {w_fape: 0.0, w_rmsd: 0.0}}
+  abl_ankh_fullgraph: {model: {edge_drop: [rbf, dir, quat], fullgraph: true}, train: {w_fape: 0.0, w_rmsd: 0.0}}
+  # abl_ankh_fullgraph with the decoder reconstructing the raw 768-d Ankh vector (non-adapted target): the Ankh-only
+  # variant of the analysis, as the latent space of abl_ankh_fullgraph collapses (analysis/ablations.py check).
+  abl_ankh_fullgraph_na:
+    model: {edge_drop: [rbf, dir, quat], fullgraph: true, nonadapted: true}
+    train: {w_fape: 0.0, w_rmsd: 0.0}
+  abl_noFAPE: {train: {w_fape: 0.0}}              # FAPE term off
+  abl_noRMSD: {train: {w_rmsd: 0.0}}              # Kabsch RMSD term off
+  abl_noCosNorm: {train: {w_cos: 0.0, w_norm: 0.0}}   # cosine and norm terms of the node-vector reconstruction off
+  abl_beta0: {train: {batch_size: 32, w_kl: 0.0}}     # no KL term (beta = 0 throughout)
+  # the decoder reconstructs the raw 768-d Ankh vector instead of the adapted 512-d vector (out_node 512 -> 768);
+  # encoder input unchanged
+  abl_nonadapted: {model: {nonadapted: true}, train: {batch_size: 32}}
+  # stop-gradient on the reconstruction target (the adaptor output is detached when it is the decoder target)
+  abl_stopgrad: {model: {stopgrad: true}}
+
+  # ---- node features
+  # ESM2-650M, last layer, 1280-d (113,812 sites)
+  plm_esm2:
+    data: ${LENSEEK_HOME}/assets/train_features_esm2
+    model: {node_dim: 1280}
+    train: {batch_size: 32, grad_accum: 8}
+  # ESM3-open, 1536-d
+  plm_esm3:
+    data: ${LENSEEK_HOME}/assets/train_features_esm3
+    model: {node_dim: 1536}
+    train: {batch_size: 32, grad_accum: 8}
+  # ESM C 300M (esmc-300m-2024-12), 960-d. The ESMC 300M Model is licensed under the EvolutionaryScale Cambrian Open
+  # License Agreement (README, License). This repository distributes no ESM C model, weights, embeddings or models
+  # trained on them.
+  plm_esmc:
+    data: ${LENSEEK_HOME}/assets/train_features_esmc
+    model: {node_dim: 960}
+    train: {batch_size: 32, grad_accum: 8}
+  # structure only: every node feature replaced by zeros; the three node-reconstruction loss terms are off (their
+  # target would be constant)
+  plm_none:
+    model: {node_const: true}
+    train: {batch_size: 32, grad_accum: 8, w_mse: 0.0, w_cos: 0.0, w_norm: 0.0}
+  # residue-type one-hot (20 standard residues in the first 20 of 768 columns) instead of Ankh. Feature store from
+  # `lenseek-featurize --node-features onehot` (113,830 sites: the 831 sites without a pocket file in BsitePDB are
+  # missing).
+  abl_onehot: {data: '${LENSEEK_HOME}/assets/train_features_onehot', train: {batch_size: 32}}
+
+  # ---- without the ligand filters: the main recipe on the 114,661 training sites plus the 34,976 sites that only
+  # lenseek.exclusion.valid_ligand removes (149,637 sites; feature store from scripts/filter_free_data.py sites, build).
+  # The search database stays the same 114,661 sites.
+  filter_free_s0: {data: '${LENSEEK_HOME}/assets/train_features_filter_free'}

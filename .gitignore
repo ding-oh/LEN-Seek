@@ -1,0 +1,18 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+/build/
+/dist/
+.ipynb_checkpoints/
+.pytest_cache/
+# run outputs and caches (repository root only); downloaded assets live in $LENSEEK_HOME
+/out/
+/logs/
+/cache/
+/runs/
+/lenseek_pockets/
+/outputs/
+/notebooks/*.executed.ipynb
+/.venv/
+*.pth
+*.part

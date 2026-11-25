@@ -1,0 +1,209 @@
+# Release assets: the single place for download locations, sizes, checksums and licenses.
+# `lenseek-fetch <name>` downloads to $LENSEEK_HOME/assets/<file> and checks size and SHA-256; `kind: tar` assets are
+# unpacked to $LENSEEK_HOME/assets/<name>/ (`root` = the directory returned inside it).
+# url: null      -> not published yet (lenseek-fetch says so; LENSEEK_ASSET_MIRROR can point to a copy). The data-record
+#                  assets download from Zenodo once published: bsitepdb from record 24492368 (BsitePDB,
+#                  doi:10.5281/zenodo.24492368), the others from record 24491227 (LEN-Seek data,
+#                  doi:10.5281/zenodo.24491227).
+# license: null  -> not decided yet.
+
+assets:
+  checkpoint_main_s0:
+    description: original model main_s0, epoch 200 (state dict + optimizer state, as written by training)
+    file: lenseek_main_s0.pth
+    size: 204885923
+    sha256: 392d113bca4309e9ac2044cd0b186c682318fc22c2e397b5a5b74b66f034b290
+    url: null
+    license: null
+    kind: file
+
+  checkpoint_main_s1:
+    description: original model, seed 1, epoch 200
+    file: lenseek_main_s1.pth
+    size: 204885923
+    sha256: 2c009f9017e395429582536589edb81641f6870d29b21d5019f039a60fbff4fe
+    url: null
+    license: null
+    kind: file
+
+  checkpoint_main_s2:
+    description: original model, seed 2, epoch 200
+    file: lenseek_main_s2.pth
+    size: 204911399
+    sha256: acd4ae48088e739880aa2d675dc9baa2a93f5d62602168c532a5c03c93d8e70e
+    url: null
+    license: null
+    kind: file
+
+  checkpoint_strict30_s0:
+    description: model trained without homologous entries strict30_s0, epoch 200
+    file: lenseek_strict30_s0.pth
+    size: 204885923
+    sha256: 1cedc0d07ad32f845c9f7a74adfecc294c60693e837972f57dbdedb8b00e8da3
+    url: null
+    license: null
+    kind: file
+
+  checkpoint_v1_0:
+    description: model of the bioRxiv preprint (v1); the v2.0 model supersedes it
+    file: lenseek_v1.0.pth
+    size: 204885923
+    sha256: 8264cbee9c0a667c95a7ddb2d4543a9d4b814c8e272cad668ba2da62bb7e3555
+    url: https://media.githubusercontent.com/media/arsenide33/LEN-Seek/c434a46a5f608f7562c90783eff61cb8bb9dd6bd/ckpt/lenseek_pretrained.pth
+    license: null
+    kind: file
+
+  latentdb_main_s0:
+    description: latent vectors of the 114,661 database sites encoded with main_s0, paper edition (ragged float32)
+    file: lenseek_latentdb_main_s0_paper.tar
+    size: 2841108480
+    sha256: eeae8b98a44aa3f38d14c2ad6e7a42c85dcfef391757520d03b25f86ac2ada8f
+    url: https://zenodo.org/records/24491227/files/lenseek_latentdb_main_s0_paper.tar?download=1
+    license: CC-BY-4.0
+    kind: tar
+    root: latentdb_main_s0
+
+  latentdb_main_s0_standard:
+    description: patch of latentdb_main_s0 for the standard edition - the sites whose N, CA or C coordinates differ
+      between the two PDB readers, re-encoded from the coordinates of the strict reader
+    file: lenseek_latentdb_main_s0_standard.npz
+    size: 17147140
+    sha256: e8b2631cf0c20877403ef1ed92b08da9a9422ad44962ea33052523076d4827f9
+    url: null
+    license: null
+    kind: file
+
+  eval_main_s0:
+    description: evaluation outputs of main_s0 - 481 x 114,661 Chamfer distances, query latents, masks, site lists, rotation test (rotation.tsv)
+    file: lenseek_eval_main_s0.tar
+    size: 263362560
+    sha256: d1eb14094a97957433ccb9660e20f99cb4427cbbc1253741be9f9a15c9a97461
+    url: null
+    license: null
+    kind: tar
+    root: out_main_s0      # the analysis scripts take the model tag from this name (main_s0)
+
+  eval_extras:
+    description: query-vs-training MMseqs2 searches (LENSEEK_STRAT_DIR) and the reconstruction set (LENSEEK_RECON_DATA, analysis/model_figures.py)
+    file: lenseek_eval_extras.tar
+    size: 112281600
+    sha256: 8ab3878b7899a1423e0d5c4b8d8e5a2e563a3772abd9266d8cc17e7190585682
+    url: null
+    license: null
+    kind: tar
+    root: eval_extras
+
+  reference_data:
+    description: wwPDB CCD SMILES and component names and types (CCD of 2026-10-24), SIFTS chain-to-Pfam and Pfam clan tables, ligand codes of the database sites (LENSEEK_REFERENCE_DIR)
+    file: lenseek_reference_data.tar
+    size: 18708480
+    sha256: e83df083cc8c53f799cb5d58a85e0b766b0d54c738256573d90948fa678e34c2
+    url: null
+    license: null
+    kind: tar
+    root: reference_data
+
+  # ---- data records: BsitePDB (record BsitePDB), evaluation queries and training features (LEN-Seek data)
+  bsitepdb:
+    description: BsitePDB in standard PDB columns - BSDB_231103 (training data and search database, 163,252
+      sites; LENSEEK_BSDB_ROOT) and BSDB_EX (evaluation period, 2,557 sites; LENSEEK_EVAL_PERIOD_ROOT);
+      bsitepdb_to_legacy_layout.py of the BsitePDB record restores the original column layout
+    file: bsitepdb.tar.gz
+    size: 7377597839
+    sha256: 13ba732978116a2af4689d80261b9ab6f7a024e5080ea5c5b331702c55126016
+    url: https://zenodo.org/records/24492368/files/bsitepdb.tar.gz?download=1
+    license: CC-BY-4.0
+    kind: tar
+    root: BsitePDB
+
+  eval_queries:
+    description: the 161 evaluation-period entries kept by the identity filter, with the 481 evaluation sites
+      (structures in standard PDB columns; LENSEEK_QUERY_ROOT)
+    file: lenseek_eval_queries.tar.gz
+    size: 22850026
+    sha256: 871b7a835dac655e4b1fe72e4999c94c71abcea663ff251707f697b19067a34f
+    url: https://zenodo.org/records/24491227/files/lenseek_eval_queries.tar.gz?download=1
+    license: CC-BY-4.0
+    kind: tar
+    root: eval_queries
+
+  train_features:
+    description: training feature store of the 114,661 database sites (Ankh rows, C-alpha positions, frames); unpacks
+      into $LENSEEK_HOME/assets/train_features, the default data of every run in data/runs.yaml
+    file: lenseek_train_features.tar
+    size: 8646993920
+    sha256: 44ccdffc2b3720e723bb71f991674016410e0c1ee6a9614086dc9546a2d54e83
+    url: https://zenodo.org/records/24491227/files/lenseek_train_features.tar?download=1
+    license: CC-BY-4.0; Ankh embeddings CC-BY-NC-SA-4.0
+    kind: tar
+
+  # ---- intermediate results the analysis reads (analysis/run.py takes each variable from the unpacked asset when it
+  #      is not set; record LEN-Seek data)
+  labels_probis_glosa:
+    description: ProBiS and G-LoSA labels - scored top-100 pairs of main_s0 (pairs_main_s0.scored.tsv, LENSEEK_PAIRS),
+      database-wide scans (scan_probis/, scan_glosa/; LENSEEK_SCAN_DIR, LENSEEK_GLOSA_SCAN_DIR) and their site lists
+      (pairs/, LENSEEK_PAIRS_DIR)
+    file: lenseek_labels_probis_glosa.tar
+    size: 569845760
+    sha256: 7cc1031a405a1c1514cbde2b318979a8c7b18eccf039f9ceb44c0b4336d1699b
+    url: https://zenodo.org/records/24491227/files/lenseek_labels_probis_glosa.tar?download=1
+    license: CC-BY-4.0
+    kind: tar
+    root: labels
+    source: scripts/labels.py (examples/labels.sh)
+
+  comparison_methods:
+    description: comparison-method outputs on the same queries and database - DeeplyTough distances and descriptors
+      (deeplytough/, LENSEEK_DT_DIR), Folddisco runs prefilter/, matching/, blosum62/, entries/ (folddisco/,
+      LENSEEK_FOLDDISCO_DIR), top-100 lists of the sequence-identity and random baselines (baselines/,
+      LENSEEK_BASELINE_DIR)
+    file: lenseek_comparison_methods.tar
+    size: 2082222080
+    sha256: 74a4a75d0a1b3b9a1a154696c32e47bd509dd32a6e163791d01529fa652e2ca1
+    url: https://zenodo.org/records/24491227/files/lenseek_comparison_methods.tar?download=1
+    license: CC-BY-4.0
+    kind: tar
+    root: comparison_methods
+    source: scripts/deeplytough.py, scripts/folddisco.py, scripts/baseline_features.py (examples/labels.sh)
+
+  timing_logs:
+    description: per-query timings of Table 2 and Supplementary Table S16 - CPU runs with the Folddisco timing (cpu/),
+      GPU runs (gpu/), DeeplyTough (dt/); LENSEEK_TIMING_CPU, LENSEEK_TIMING_GPU, LENSEEK_TIMING_DT
+    file: lenseek_timing_logs.tar
+    size: 3665920
+    sha256: c5a3d23deac530201acd898a855103330a104682493526d9fee8c644ddda2426
+    url: https://zenodo.org/records/24491227/files/lenseek_timing_logs.tar?download=1
+    license: CC-BY-4.0
+    kind: tar
+    root: timing
+    source: scripts/timing.py (examples/timing.sh)
+
+  holdout_outputs:
+    description: binding sites from later PDB entries - the one scoring run (run/, LENSEEK_HOLDOUT_RUN), its ProBiS
+      labels (labels.scored.tsv, LENSEEK_HOLDOUT_LABELS), the thresholds (thresholds/, LENSEEK_HOLDOUT_THRESHOLDS) and
+      the manifest of the sites (manifest.tsv, LENSEEK_HOLDOUT_MANIFEST); the analysis only reads them
+    file: lenseek_holdout_outputs.tar
+    size: 2794926080
+    sha256: 2e3ebb8ff7a08d02e44e4eae5de11a6fa9ab86097b21a4f4eb87777c1dadcfbe
+    url: https://zenodo.org/records/24491227/files/lenseek_holdout_outputs.tar?download=1
+    license: CC-BY-4.0
+    kind: tar
+    root: holdout
+    source: scripts/holdout.py, scripts/labels.py, analysis/holdout_score.py thresholds (examples/holdout.sh)
+
+  derived_tables:
+    description: the other intermediate files the results read - evaluation outputs of the seeds and variants
+      (eval/out_<run>/, LENSEEK_EVAL_ROOT; the Non-adapted Model's also LENSEEK_NA_EVAL_DIR) and their degeneracy
+      checks (ablations/), the Non-adapted Model's scored pairs, the larger-database and single-vector result tables
+      (scaling/, single_vector/), the encodings of the sites removed by the ligand filters (scaling/added/), and below
+      the same paths as in $LENSEEK_OUT the site annotation and strata, the database scan, the sequence searches of
+      the binding sites from later PDB entries, the DeeplyTough preparation time and the null labels
+    file: lenseek_derived_tables.tar
+    size: 5543792640
+    sha256: 64342041f81dfaafad8e03440387c231073454a39cdec09b7a6c2b094511da7c
+    url: https://zenodo.org/records/24491227/files/lenseek_derived_tables.tar?download=1
+    license: CC-BY-4.0
+    kind: tar
+    root: derived
+    source: scripts/evaluate.py, scripts/site_annotation.py, scripts/database_scan.py, scripts/scaling.py,
+      scripts/single_vector.py, scripts/holdout.py, scripts/labels.py null (examples/*.sh)

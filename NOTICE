@@ -1,0 +1,20 @@
+LEN-Seek
+Copyright 2026 Kyunghwan Yeo, Dongwoo Kim, Jaemin Sim, Juyong Lee
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This repository contains no third-party source code. It calls or refers to, but does not include, the following
+separately licensed software and models; their own terms apply when you obtain and use them:
+  - Ankh-base protein language model weights (ElnaggarLab/ankh-base): CC BY-NC-SA 4.0
+  - ESM2-650M (facebook/esm2_t33_650M_UR50D), referred to by run plm_esm2 of data/runs.yaml: MIT
+  - ESM3-open (EvolutionaryScale/esm3-sm-open-v1), referred to by run plm_esm3 of data/runs.yaml: see its model card
+  - ESM C 300M (EvolutionaryScale/esmc-300m-2024-12), referred to by run plm_esmc of data/runs.yaml:
+    The ESMC 300M Model is licensed under the EvolutionaryScale Cambrian Open License Agreement.
+    No ESM C model, weights, embeddings or models trained on them are distributed with this repository.
+  - ProBiS, G-LoSA, DeeplyTough, MMseqs2, Foldseek, RDKit, gemmi, faiss (used by scripts/ and analysis/)
+
+Example structures in data/example/queries/ are derived from wwPDB entries 7UAD, 8AGA, 8H43 and 8HO6 (PDB data:
+CC0 1.0). The example embeddings in data/example/embeddings/ were computed with Ankh-base.
+
+Model checkpoints, latent-space datasets and other files that `lenseek-fetch` downloads are not part of this repository;
+the license of each will be recorded with that file in lenseek/configs/assets.yaml when the files are published.

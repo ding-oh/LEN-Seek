@@ -1,0 +1,36 @@
+# Environment the released models were trained and evaluated in (Python 3.11.18, torch 2.9.0+cu128, CUDA 12.8,
+# cuDNN 9.10.2, accelerate 1.11.0). Create with:
+#   conda env create -f environment.yml && conda activate lenseek && pip install -e . --no-deps
+# CPU-only machines: replace the extra index URL below with https://download.pytorch.org/whl/cpu and the torch pin
+# with torch==2.9.0 (the CPU build gives the same results within floating-point noise;
+# tests/test_example_search.py checks the example search).
+name: lenseek
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11.18
+  - pip
+  - pip:
+      - --extra-index-url https://download.pytorch.org/whl/cu128
+      - torch==2.9.0+cu128
+      - numpy==2.3.5
+      - pyyaml==6.0.3
+      - tqdm==4.70.1
+      - accelerate==1.11.0
+      - transformers==4.48.1
+      - tokenizers==0.21.4
+      - sentencepiece==0.2.2
+      - huggingface_hub==0.36.2
+      - safetensors==0.8.0
+      - scipy==1.17.1
+      - pandas==2.2.3
+      - scikit-learn==1.9.1
+      - matplotlib==3.11.2
+      - seaborn==0.13.2
+      - rdkit==2026.9.1
+      - gemmi==0.7.5
+      - faiss-cpu==1.15.1
+      - pytest
+      - nbformat
+      - nbconvert
+      - ipykernel
