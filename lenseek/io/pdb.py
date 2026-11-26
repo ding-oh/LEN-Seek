@@ -206,7 +206,9 @@ def read_structure(path: str, mode: str = "strict") -> Structure:
                 f"{path}:{no}: residue {rid} is both {res.name} and {resname}. Two residues share chain, number and "
                 f"insertion code; the file has probably lost its insertion-code column. Renumber or restore it.")
         if name in res.atoms:
-            raise PDBParseError(f"{path}:{no}: atom {name} of residue {rid} appears twice")
+            raise PDBParseError(
+                f"{path}:{no}: atom {name} of residue {rid} appears twice without an alternate-location label; the "
+                f"file has probably lost its altloc column. Keep one conformation per atom.")
         res.atoms[name] = np.array(xyz)
     return st
 

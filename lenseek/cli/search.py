@@ -97,12 +97,19 @@ def main(argv=None):
     ckpt = resolve_checkpoint(args.checkpoint, args.model)
     model, cfg, info = load_model(ckpt, device=args.device)
     db = open_db(args, info.name)   # before --embed, so that a missing checkpoint or database stops at once
+    unreadable = {}   # protein file -> reason; its pockets are skipped like any other query that cannot be featurized
     if args.embed:
         from ..ankh import embed_protein
         for protein in sorted({pr for _, pr in pairs}):
-            embed_protein(protein, emb_dir, default_entry_name(protein), mode=args.parser, device=args.device)
+            try:
+                embed_protein(protein, emb_dir, default_entry_name(protein), mode=args.parser, device=args.device)
+            except PDBParseError as e:
+                unreadable[protein] = str(e)
     sites, failed = [], []
     for pocket, protein in pairs:
+        if protein in unreadable:
+            failed.append((pocket, unreadable[protein]))
+            continue
         try:
             sites.append(featurize_site(pocket, protein, emb_dir, mode=args.parser, node_dim=cfg.node_dim))
         except (FeaturizeError, PDBParseError, ValueError) as e:

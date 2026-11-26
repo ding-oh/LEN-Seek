@@ -99,6 +99,14 @@ def test_lost_insertion_codes_fail_loudly(tmp_path):
         pdbio.read_structure(p)
 
 
+def test_duplicate_atom_without_altloc_fails_with_the_reason(tmp_path):
+    """Tools that drop the altloc column leave two copies of an atom; the strict reader names the cause."""
+    lines = [std_line(1, "OG", "SER", "A", 77, "", 0.0, 0.0, 0.0), std_line(2, "OG", "SER", "A", 77, "", 1.0, 1.0, 1.0)]
+    p = write(tmp_path, "dup.pdb", lines)
+    with pytest.raises(pdbio.PDBParseError, match="alternate-location"):
+        pdbio.read_structure(p)
+
+
 def test_unreadable_record_fails_loudly(tmp_path):
     bad = std_line(1, "CA", "GLY", "A", 5, "", 1.0, 2.0, 3.0)
     bad = bad[:30] + "  abc.de" + bad[38:]
