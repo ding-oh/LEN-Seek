@@ -73,14 +73,14 @@ python scripts/search_ligand.py complex.cif --ligand ATP:A:501 --out hits.tsv
 | Package and command-line tools (search, embedding, featurization, training) | `lenseek/` |
 | Code behind every reported number | `scripts/` writes the intermediate files, `analysis/` turns them into the paper's numbers |
 | Configuration of every reported training run, example sites | `data/` |
-| Model checkpoints, evaluation outputs, reference tables | to be attached to the v2.0 GitHub release |
+| Model checkpoints, evaluation outputs of `main_s0`, reference tables, archived copy of this release | the LEN-Seek data record |
 | BsitePDB: the binding-site and protein files of the database and of the evaluation period | Zenodo record BsitePDB [doi:10.5281/zenodo.24492368](https://doi.org/10.5281/zenodo.24492368) |
 | Training features, the reason each site was or was not used for training, the training and evaluation split, evaluation queries, list of the binding sites from later PDB entries, latent-space dataset | Zenodo record LEN-Seek data [doi:10.5281/zenodo.24491227](https://doi.org/10.5281/zenodo.24491227) |
 | Intermediate results the analysis reads: ProBiS and G-LoSA scan scores, DeeplyTough and Folddisco scores and top-100 lists, sequence-identity and random rankings, timing logs, scoring outputs of the binding sites from later PDB entries, evaluation outputs of the seeds and variants, site annotation, scaling result tables | the LEN-Seek data record; `examples/*.sh` produce them |
 | Synthetic databases and indexes of the larger-database study | not distributed; `examples/scaling.sh` rebuilds them, and their result tables are in the LEN-Seek data record |
 | Checkpoints of the variants | not distributed; `data/runs.yaml` trains each of them |
 
-Once the data records and the release are public, `lenseek-fetch <name>` downloads each file (`lenseek-fetch --list`
+Once the data records are public, `lenseek-fetch <name>` downloads each file (`lenseek-fetch --list`
 names them) and `analysis/run.py` reads the unpacked files without further settings. Version 2.0 supersedes version 1.0
 of the code.
 

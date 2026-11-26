@@ -1,8 +1,9 @@
 # Trained checkpoints
 
-The files have no public location yet (except `checkpoint_v1_0`, which `lenseek-fetch` downloads from the URL in
-`lenseek/configs/assets.yaml`); it will be given here. Place them in `$LENSEEK_HOME/assets/` (default
-`~/.cache/lenseek/assets/`), or set `LENSEEK_ASSET_MIRROR` to a folder that holds a local copy; `lenseek-fetch` and
+The checkpoints are in the Zenodo record LEN-Seek data ([doi:10.5281/zenodo.24491227](https://doi.org/10.5281/zenodo.24491227));
+`lenseek-fetch <name>` downloads each of them (`checkpoint_v1_0` comes from the repository of version 1.0). Files are
+stored in `$LENSEEK_HOME/assets/` (default `~/.cache/lenseek/assets/`); `LENSEEK_ASSET_MIRROR` can point to a folder
+that holds a local copy instead. `lenseek-fetch` and
 `lenseek-search` check each file's SHA-256 against `lenseek/configs/assets.yaml` and recognise the model from it. Each `.pth` holds the model and optimizer states after
 the last of 200 epochs; there is no validation step, so no epoch was selected with evaluation-set quantities.
 
@@ -39,9 +40,9 @@ Queries searched against it must be encoded with the same checkpoint.
 
 `checkpoint_v1_0` (`--model v1.0`) is the model of the bioRxiv preprint (v1); the v2.0 model supersedes it.
 
-The other files the analysis scripts read (evaluation outputs and reference tables of the release; labels,
-comparison-method outputs, timing logs and scoring outputs of the binding sites from later PDB entries of the LEN-Seek
-data record) are listed by `lenseek-fetch --list` with their SHA-256 in `lenseek/configs/assets.yaml`.
+The other files the analysis scripts read (evaluation outputs, reference tables, labels, comparison-method outputs,
+timing logs and scoring outputs of the binding sites from later PDB entries, all in the LEN-Seek data record) are
+listed by `lenseek-fetch --list` with their SHA-256 in `lenseek/configs/assets.yaml`.
 
 | File | SHA-256 |
 |---|---|

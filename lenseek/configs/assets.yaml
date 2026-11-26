@@ -1,10 +1,10 @@
 # Release assets: the single place for download locations, sizes, checksums and licenses.
 # `lenseek-fetch <name>` downloads to $LENSEEK_HOME/assets/<file> and checks size and SHA-256; `kind: tar` assets are
 # unpacked to $LENSEEK_HOME/assets/<name>/ (`root` = the directory returned inside it).
-# url: null      -> not published yet (lenseek-fetch says so; LENSEEK_ASSET_MIRROR can point to a copy). The data-record
-#                  assets download from Zenodo once published: bsitepdb from record 24492368 (BsitePDB,
-#                  doi:10.5281/zenodo.24492368), the others from record 24491227 (LEN-Seek data,
-#                  doi:10.5281/zenodo.24491227).
+# url: null      -> not published yet (lenseek-fetch says so; LENSEEK_ASSET_MIRROR can point to a copy). The Zenodo
+#                  assets download once the records are published: bsitepdb from record 24492368 (BsitePDB,
+#                  doi:10.5281/zenodo.24492368), the others, the checkpoints included, from record 24491227 (LEN-Seek
+#                  data, doi:10.5281/zenodo.24491227).
 # license: null  -> not decided yet.
 
 assets:
@@ -13,8 +13,8 @@ assets:
     file: lenseek_main_s0.pth
     size: 204885923
     sha256: 392d113bca4309e9ac2044cd0b186c682318fc22c2e397b5a5b74b66f034b290
-    url: null
-    license: null
+    url: https://zenodo.org/records/24491227/files/lenseek_main_s0.pth?download=1
+    license: CC-BY-4.0
     kind: file
 
   checkpoint_main_s1:
@@ -22,8 +22,8 @@ assets:
     file: lenseek_main_s1.pth
     size: 204885923
     sha256: 2c009f9017e395429582536589edb81641f6870d29b21d5019f039a60fbff4fe
-    url: null
-    license: null
+    url: https://zenodo.org/records/24491227/files/lenseek_main_s1.pth?download=1
+    license: CC-BY-4.0
     kind: file
 
   checkpoint_main_s2:
@@ -31,8 +31,8 @@ assets:
     file: lenseek_main_s2.pth
     size: 204911399
     sha256: acd4ae48088e739880aa2d675dc9baa2a93f5d62602168c532a5c03c93d8e70e
-    url: null
-    license: null
+    url: https://zenodo.org/records/24491227/files/lenseek_main_s2.pth?download=1
+    license: CC-BY-4.0
     kind: file
 
   checkpoint_strict30_s0:
@@ -40,8 +40,8 @@ assets:
     file: lenseek_strict30_s0.pth
     size: 204885923
     sha256: 1cedc0d07ad32f845c9f7a74adfecc294c60693e837972f57dbdedb8b00e8da3
-    url: null
-    license: null
+    url: https://zenodo.org/records/24491227/files/lenseek_strict30_s0.pth?download=1
+    license: CC-BY-4.0
     kind: file
 
   checkpoint_v1_0:
@@ -69,8 +69,8 @@ assets:
     file: lenseek_latentdb_main_s0_standard.npz
     size: 17147140
     sha256: e8b2631cf0c20877403ef1ed92b08da9a9422ad44962ea33052523076d4827f9
-    url: null
-    license: null
+    url: https://zenodo.org/records/24491227/files/lenseek_latentdb_main_s0_standard.npz?download=1
+    license: CC-BY-4.0
     kind: file
 
   eval_main_s0:
@@ -78,8 +78,8 @@ assets:
     file: lenseek_eval_main_s0.tar
     size: 263362560
     sha256: d1eb14094a97957433ccb9660e20f99cb4427cbbc1253741be9f9a15c9a97461
-    url: null
-    license: null
+    url: https://zenodo.org/records/24491227/files/lenseek_eval_main_s0.tar?download=1
+    license: CC-BY-4.0
     kind: tar
     root: out_main_s0      # the analysis scripts take the model tag from this name (main_s0)
 
@@ -88,8 +88,8 @@ assets:
     file: lenseek_eval_extras.tar
     size: 112281600
     sha256: 8ab3878b7899a1423e0d5c4b8d8e5a2e563a3772abd9266d8cc17e7190585682
-    url: null
-    license: null
+    url: https://zenodo.org/records/24491227/files/lenseek_eval_extras.tar?download=1
+    license: CC-BY-4.0
     kind: tar
     root: eval_extras
 
@@ -98,8 +98,8 @@ assets:
     file: lenseek_reference_data.tar
     size: 18708480
     sha256: e83df083cc8c53f799cb5d58a85e0b766b0d54c738256573d90948fa678e34c2
-    url: null
-    license: null
+    url: https://zenodo.org/records/24491227/files/lenseek_reference_data.tar?download=1
+    license: CC-BY-4.0
     kind: tar
     root: reference_data
 
