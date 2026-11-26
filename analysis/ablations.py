@@ -3,8 +3,9 @@
 
 Every variant (common.RUNS: run, node features, training sites, group, row label) is evaluated like the original
 model: its eval dir out_<run>/ is written by scripts/evaluate.py, in the database order of the original model
-(--db-order; the language-model variants lack the sites without a chain embedding, which get NaN distances). Steps,
-in order (each a subcommand):
+(--db-order; the language-model variants lack the sites without a chain embedding, which get NaN distances). The
+runs of group factorial are the models of Supplementary Table S15 only (analysis/factorial.py). Steps, in order
+(each a subcommand):
   check      active latent units: variance of each latent dimension of mu over the valid residues of 2,000 database
              sites (default_rng(0), without replacement), AU = dimensions with variance > 0.01. AU = 0 is a latent
              collapse: the run is reported but no comparison containing it is read. -> ablations/<run>/degeneracy.json
@@ -48,18 +49,14 @@ import pandas as pd
 from scipy.stats import rankdata
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import (LENSEEK, OUT_ROOT, PROTEIN_STRATA, RUNS, EvalOutputs, auc_from_ranks,  # noqa: E402
-                    bootstrap_proteins, bulk_dice, die, entry_weighted, fingerprints, identity_strata, load_cache,
-                    mcc, protein_of, site_tables)
+from common import (FRAME_STRATA, PATHS, RUNS, EvalOutputs, auc_from_ranks, bootstrap_proteins,  # noqa: E402
+                    bulk_dice, deg_state, die, entry_weighted, fingerprints, grid_file, identity_strata, load_cache,
+                    mcc, oof_top1, protein_of, site_tables, t1_row, top1_mcc, usable)
 
 REF, SEEDS = "main_s0", ["main_s0", "main_s1", "main_s2"]
 COMMON_SITE_RUNS = ["main_s0", "plm_esm2", "plm_esm3", "plm_esmc", "plm_none"]
 N_BOOT = 10000
 COLLAPSE = "latent collapse; values reflect ties and rounding, not information"
-PATHS = dict(eval_root=os.environ.get("LENSEEK_EVAL_ROOT") or os.path.join(OUT_ROOT, "eval"),
-             fig=os.path.join(OUT_ROOT, "fig4"), t1=os.path.join(OUT_ROOT, "table1"),
-             out=os.path.join(OUT_ROOT, "ablations"), common=os.path.join(OUT_ROOT, "ablations", "common_sites_eval"),
-             strata=PROTEIN_STRATA)
 
 
 # ------------------------------------------------------------------ paths and run state
@@ -70,40 +67,6 @@ def eval_dir(run):
     return os.path.join(PATHS["eval_root"], f"out_{run}")
 
 
-def grid_file(run, name="ligand_grid_per_query.csv"):
-    """A whole-database ligand-metrics file of the run (fig4_ligand.py grid)."""
-    return os.path.join(PATHS["fig"], run, name)
-
-
-def t1_dir(run):
-    """The run's out-of-fold Table 1 folder (table1_concordance.py table1 --out)."""
-    return os.path.join(PATHS["t1"], run)
-
-
-def t1_row(run):
-    """LEN-Seek top-1 row (k = 1) of the run's table1A.csv, or None."""
-    f = os.path.join(t1_dir(run), "table1A.csv")
-    if not os.path.exists(f):
-        return None
-    t = pd.read_csv(f)
-    t = t[(t.method == LENSEEK) & (t.k == 1)]
-    return t.iloc[0] if len(t) else None
-
-
-def deg_state(run):
-    """('ok' | 'degenerate' | 'unchecked', degeneracy.json or None); an unchecked run is treated as degenerate."""
-    f = os.path.join(PATHS["out"], run, "degeneracy.json")
-    if not os.path.exists(f):
-        return "unchecked", None
-    try:
-        with open(f) as fh:
-            j = json.load(fh)
-        au = int(j["au"])
-    except (OSError, ValueError, KeyError, TypeError):
-        return "unchecked", None
-    return ("degenerate" if au == 0 else "ok"), j
-
-
 _ID = {}
 
 
@@ -112,11 +75,6 @@ def id_stratum(protein):
     if not _ID:
         _ID.update(identity_strata(PATHS["strata"]))
     return _ID.get(protein, "missing")
-
-
-def usable(t):
-    """Queries with a ligand fingerprint, at least one ligand-similar and one other database site."""
-    return t[t.has_query_fp & (t.n_pos > 0) & (t.n_pos < t.n_db)]
 
 
 # ------------------------------------------------------------------ check (active latent units)
@@ -281,32 +239,12 @@ def mcc_values(run, basis="full"):
     return oof_top1(run)
 
 
-def oof_top1(run):
-    """Per-query out-of-fold top-1 outcome (query_key, protein, cluster, fold, truth, pred) from top1_oof.csv of
-    table1_concordance.py table1; its top-1 MCC must equal the LEN-Seek k = 1 row of table1A.csv."""
-    f = os.path.join(t1_dir(run), "top1_oof.csv")
-    r1 = t1_row(run)
-    if not os.path.exists(f) or r1 is None:
-        return None
-    top1 = pd.read_csv(f, dtype={"query_key": str, "protein": str, "cluster": str})
-    ok = np.isfinite(top1.truth)
-    m = top1_mcc(top1.truth[ok].astype(bool).to_numpy(), top1.pred[ok].astype(bool).to_numpy())
-    if abs(m - r1["MCC"]) > 1e-9:
-        die(f"{run}: top-1 MCC of top1_oof.csv {m} != table1A.csv {r1['MCC']}")
-    return top1[ok][["query_key", "protein", "cluster", "fold", "truth", "pred"]]
-
-
 def _get(metric, run, basis):
     return lig_values(run, basis) if metric == "lig_auc" else mcc_values(run, basis)
 
 
 def _mcc(S, i=""):
     return mcc(*(S[f"{k}{i}"] for k in ["TP", "FP", "FN", "TN"]))
-
-
-def top1_mcc(t, p):
-    """MCC of boolean truth t and prediction p."""
-    return mcc((t & p).sum(), (~t & p).sum(), (t & ~p).sum(), (~t & ~p).sum())
 
 
 def contrast(metric, terms, stratum="all", basis="full", universe=None):
@@ -458,7 +396,6 @@ def build_contrasts(runs):
 # ------------------------------------------------------------------ identity strata of the ligand metrics
 FRAME_METRICS = [("raw_auc", "lenseek_raw__auc"), ("re1", "lenseek_raw__re1"),
                  ("raw_auc_db_entries", "lenseek_raw__auc_db_entries")]
-FRAME_STRATA = [("all", None), ("<30", {"<30"}), (">=30", {"30-40", "40-50", "50-80", "80-95", ">=95"})]
 
 
 def frame_values(run, col):
@@ -565,7 +502,7 @@ def delta_cols(prefix, r, ok):
 
 def cmd_table(a):
     os.makedirs(PATHS["out"], exist_ok=True)
-    reg = {r[0]: r for r in RUNS}
+    reg = {r[0]: r for r in RUNS if r[3] != "factorial"}
     runs = a.runs.split(",") if a.runs else [r for r in reg if os.path.exists(grid_file(r))]
     if REF not in runs:
         die(f"no ligand metrics of {REF} in {PATHS['fig']}")

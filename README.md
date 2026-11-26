@@ -30,7 +30,7 @@ residue; the encoded training data form the Latent Space Database, and two sites
 distance between their sets of latent vectors.
 
 - **Concordance with ProBiS.** On the 448 binding sites of the evaluation data, LEN-Seek kept precision and recall above
-  0.80 through the top-50 results, with a top-1 MCC of 0.724 at a Chamfer distance of 42.5 (Table 1).
+  0.80 through the top-50 results, with a top-1 MCC of 0.7238 at a Chamfer distance of 42.5 (Table 1).
 - **Agreement with G-LoSA.** For the top-100 results, the Chamfer distance and the G-LoSA GA-score have a Pearson
   correlation of −0.906.
 - **Ligand similarity.** Of the top-100 pairs LEN-Seek classified as similar, 86.94 % bind ligands with a Dice
@@ -182,12 +182,13 @@ Comparison methods on the same queries (Supplementary Table S13 B; ProBiS metric
 | DeeplyTough | 0.709 | −0.056 | 0.038 | 0.685 | 5.71 |
 | Folddisco | 0.859 | 0.618 | 0.786 | 0.587 | 10.81 |
 | Sequence-identity baseline | 0.692 | 0.533 | 0.613 | 0.527 | 6.28 |
-| Random ranking | 0.499 | undefined | 0.005 | 0.502 | 0.95 |
+| Random ranking | 0.499 | – | 0.005 | 0.502 | 0.95 |
 
 - **Computation time (Table 2):** 2.79 s per query on 16 CPU cores and 0.53 s on one GPU, against 734.2 s for ProBiS and
   362.7 s for G-LoSA on the same 16 cores.
 - **Further results:** the Supplementary results (out-of-fold thresholds, G-LoSA, strata, binding sites from later PDB
-  entries, variants, larger databases, computation time) are reproduced by `analysis/run.py`.
+  entries, variants, node features and geometry, larger databases, computation time) are reproduced by
+  `analysis/run.py`.
 
 ## Project structure
 
@@ -223,15 +224,15 @@ Kyunghwan Yeo<sup>†</sup>, Dongwoo Kim<sup>†</sup>, Jaemin Sim, Juyong Lee. 
 }
 ```
 
-The data records: Dongwoo Kim, Juyong Lee. BsitePDB: ligand binding sites from the Protein Data Bank. *Zenodo* (2026).
-https://doi.org/10.5281/zenodo.24492368 — Kyunghwan Yeo<sup>†</sup>, Dongwoo Kim<sup>†</sup>, Jaemin Sim, Juyong Lee.
-LEN-Seek data: training features, evaluation and hold-out sets, latent-space dataset and intermediate results.
-*Zenodo* (2026). https://doi.org/10.5281/zenodo.24491227
+The data records: Dongwoo Kim, Kyunghwan Yeo, Myunghyun Jang, Jaemin Sim, Juyong Lee. BsitePDB: ligand binding sites
+from the Protein Data Bank. *Zenodo* (2026). https://doi.org/10.5281/zenodo.24492368 — Kyunghwan Yeo<sup>†</sup>,
+Dongwoo Kim<sup>†</sup>, Jaemin Sim, Juyong Lee. LEN-Seek data: training features, evaluation and hold-out sets,
+latent-space dataset and intermediate results. *Zenodo* (2026). https://doi.org/10.5281/zenodo.24491227
 
 ```bibtex
 @misc{dongwoo2023bsdb,
   title        = {{BsitePDB}: ligand binding sites from the {Protein Data Bank}},
-  author       = {Kim, Dongwoo and Lee, Juyong},
+  author       = {Kim, Dongwoo and Yeo, Kyunghwan and Jang, Myunghyun and Sim, Jaemin and Lee, Juyong},
   year         = {2026},
   howpublished = {Zenodo},
   doi          = {10.5281/zenodo.24492368}

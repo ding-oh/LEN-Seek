@@ -9,7 +9,7 @@
 # processes is the one that makes the global batch 512 (batch_size x processes x grad_accum): two GPUs for most runs,
 # one for the runs with batch_size 32 and grad_accum 16. Needs the train extra (accelerate).
 # Each run is then evaluated like the original model (eval dir in the database order of the original model) before
-# `python analysis/run.py ablations` reads it:
+# `python analysis/run.py ablations` reads it (`factorial` for the models of Supplementary Table S15):
 #   python scripts/evaluate.py --checkpoint runs/<run>/final.pth --features <node features of the database> \
 #       --queries <query cache> --out $LENSEEK_EVAL_ROOT/out_<run> --db-order $LENSEEK_EVAL_DIR/db_paths.txt
 # (a language-model variant lacks the sites without a chain embedding; they get NaN distances). The original model's

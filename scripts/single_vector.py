@@ -1,5 +1,5 @@
 """Single-vector baselines and the residue two-stage retrieval on the search database (Supplementary Section S8 and
-Table S15 A; analysis/table3_two_stage.py makes the table).
+Table S16 A; analysis/table3_two_stage.py makes the table).
 
 Can one vector per site, searched with a standard approximate nearest-neighbour library (FAISS), stand in for the
 exact Chamfer ranking? The reference is the exact Chamfer top-k of every query over the search database; recall@k is
@@ -13,7 +13,7 @@ Subcommands, in run order (outputs in $LENSEEK_OUT/single_vector/):
              queries (sites grouped into size classes, wrap-padded)       -> exact_scan.tsv
   pooling    one pooled vector per site (mean, max, mean||max; Euclidean or cosine; exact search): recall of the pooled
              top-k and of the pooled top-K' after an exact re-rank        -> pooling.tsv
-  faiss      the pooled-vector rows of Table S15 A: exact search over mean and over mean||max vectors (FAISS Flat), and
+  faiss      the pooled-vector rows of Table S16 A: exact search over mean and over mean||max vectors (FAISS Flat), and
              the mean vectors in HNSW32 (efSearch 1,000) and IVF1024,PQ32 (nprobe 64) as the first stage of an exact
              re-rank of K' = 1,000          -> faiss_pooled_single.tsv, faiss_pooled_2stage.tsv, rerank_latency.tsv
   residue    two-stage search with an IVF4096,PQ32 index of all residue vectors (r = 256 neighbours per query residue,

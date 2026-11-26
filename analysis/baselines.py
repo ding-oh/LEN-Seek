@@ -64,94 +64,18 @@ from scipy.stats import rankdata
 from sklearn.model_selection import GroupKFold, PredefinedSplit
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import (BASELINE_OUT, OUT_ROOT, EvalOutputs, Homology, auc_from_ranks, boot_weights,  # noqa: E402
-                    bulk_dice, cluster_of, die, enrich, entry_weighted, fingerprints, identity_strata, load_cache,
-                    make_grid, mcc, mw_auc, protein_of, require_path, run_cv, site_key, site_tables, tie_key)
+from common import (BASELINE_OUT, BASELINES, BL_STEP, DT_STEP, FOLDS, G, LS_STEP, OUT_ROOT, Baselines,  # noqa: E402
+                    EvalOutputs, auc_from_ranks, boot_weights, bulk_dice, cluster_of, die, enrich, entry_weighted,
+                    fingerprints, identity_strata, load_cache, make_grid, mcc, mw_auc, probis_query, require_path,
+                    run_cv, site_key, site_tables, tie_key)
 
 RE_MIN_POS = 5
-BASELINES = ["seqid", "random"]
-RANDOM_SEED = 0
-Z_THR, GA_THR, N_BOOT, BOOT_SEED, FOLDS = 2.0, 0.59, 10000, 0, 5
-LS_STEP, BL_STEP, DT_STEP = 0.5, 0.001, 0.0001
+N_BOOT, BOOT_SEED = 10000, 0
 MAIN = "lenseek_main_s0"
 ID_GE30 = ["30-40", "40-50", "50-80", "80-95", ">=95"]
-G = {}
-
-
-# ---------------------------------------------------------------- baselines
-class Baselines:
-    def __init__(self, ev):
-        self.ev = ev
-        self.n_db = len(ev.db_keys)
-        self.H = Homology(ev.q_keys, ev.db_keys)
-
-    def ranking(self, qi, names=BASELINES):
-        """{baseline: score of every database site for query qi}."""
-        out = {}
-        for n in names:
-            if n == "seqid":
-                out[n] = self.H.identity(qi)
-            elif n == "random":
-                out[n] = np.random.default_rng(np.random.SeedSequence([RANDOM_SEED, int(qi)])).random(self.n_db)
-            else:
-                raise KeyError(n)
-        return out
 
 
 # ---------------------------------------------------------------- ProBiS comparison
-def probis_query(qi):
-    """Per-query ProBiS ROC-AUC of every method on the common pair set and its top-1 (d, label, db_idx); r['glosa']:
-    the same with the G-LoSA labels."""
-    g = G
-    st = np.asarray(g["status"][qi])
-    raw = np.asarray(g["raw"][qi], dtype=np.float64)
-    key = g["q_keys"][qi]
-    r = dict(q_idx=int(qi), query_key=key, protein=protein_of(key), n_pending=int((st == 0).sum()))
-    if r["n_pending"]:
-        r["excluded"] = "pending pairs"
-        return r, None
-    z = np.round((raw - 1.958) / 2.21468, 2)
-    lab = np.full(len(st), np.nan)
-    lab[st == 1] = (z[st == 1] >= Z_THR).astype(float)
-    lab[st == 2] = 0.0
-    scored = np.isfinite(lab)
-    sc, ties, dists = {}, {}, {}
-    for name, D in g["ls"].items():
-        d = np.asarray(D[qi], dtype=np.float64)
-        sc[name], ties[name], dists[name] = -d, g["dbidx"], d
-    dd = np.asarray(g["dt"][qi], dtype=np.float64)
-    sc["deeplytough"], ties["deeplytough"], dists["deeplytough"] = -dd, g["dbidx"], dd
-    for name, D in g.get("extra", {}).items():
-        dx = np.asarray(D[qi], dtype=np.float64)
-        sc[name], ties[name], dists[name] = -dx, g["dbidx"], dx
-    tie = tie_key(qi, g["n_db"])
-    for name, s in g["bl"].ranking(qi, BASELINES).items():
-        sc[name], ties[name], dists[name] = s, tie, 1.0 - s
-    finite = np.ones(len(st), bool)
-    for s in sc.values():
-        finite &= np.isfinite(s)
-    okg = (np.asarray(g["gst"][qi]) == 1) & finite
-    yg = np.asarray(g["ga"][qi], dtype=np.float64)[okg] >= GA_THR
-    r["glosa"] = dict(n_db=int(okg.sum()), n_pos=int(yg.sum()))
-    if 0 < yg.sum() < len(yg):
-        r["glosa"].update({f"{name}__auc": mw_auc(s[okg], yg) for name, s in sc.items()})
-    ok = scored & finite
-    y = np.where(scored, lab, 0).astype(bool)[ok]
-    r.update(n_db=int(ok.sum()), n_failed=int((~scored).sum()), n_unscorable_method=int((scored & ~finite).sum()),
-             n_pos=int(y.sum()))
-    if not (0 < r["n_pos"] < r["n_db"]):
-        r["excluded"] = "no positive" if r["n_pos"] == 0 else "no negative"
-        return r, None
-    r["excluded"] = ""
-    idx = np.nonzero(ok)[0]
-    top1 = {}
-    for name, s in sc.items():
-        r[f"{name}__auc"] = mw_auc(s[ok], y)
-        o = np.lexsort((ties[name][ok], -s[ok]))[0]
-        top1[name] = (float(dists[name][idx[o]]), int(y[o]), int(idx[o]))
-    return r, top1
-
-
 def grid_step(method):
     """Threshold grid step on d: LEN-Seek 0.5, baselines 0.001, DeeplyTough and the further methods 0.0001."""
     return LS_STEP if method.startswith("lenseek_") else BL_STEP if method in BASELINES else DT_STEP

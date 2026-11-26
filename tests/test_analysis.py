@@ -359,17 +359,17 @@ def test_glosa_auc_on_the_common_pair_set(monkeypatch):
     """baselines.py compare, G-LoSA labels: the database sites every method can score with a G-LoSA score (here a
     site without a DeeplyTough descriptor and a failed G-LoSA pair are left out); GA >= 0.59 in double precision, so a
     stored float32 0.59 is negative."""
-    import baselines as BP
+    import common
 
     class Ranking:
         def ranking(self, qi, names):
             return dict(zip(names, map(np.array, ([.1, .3, .7, .2, .4, .5], [.5] * 6))))
-    monkeypatch.setattr(BP, "G", dict(
+    monkeypatch.setattr(common, "G", dict(
         status=np.ones((1, 6), np.uint8), raw=np.array([[10., 0, 0, 10, 0, 0]]), gst=np.array([[1, 1, 1, 1, 1, 3]]),
         ga=np.array([[.8, .59, .2, .7, .1, .9]], np.float32), q_keys=["1abc/ligand_pocket_1_A.pdb"], n_db=6,
         dbidx=np.arange(6), ls={"lenseek_main_s0": np.array([[1., 2, 3, 4, 5, 6]])}, bl=Ranking(),
         dt=np.array([[.1, .2, np.nan, .3, .5, .6]])))
-    r, _ = BP.probis_query(0)
+    r, _ = common.probis_query(0)
     assert r["glosa"] == dict(n_db=4, n_pos=2, lenseek_main_s0__auc=0.75, deeplytough__auc=0.75, seqid__auc=0.0,
                               random__auc=0.5)
     assert r["excluded"] == "" and r["n_db"] == 5 and r["n_pos"] == 2

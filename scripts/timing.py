@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-"""Timing runs behind main-text Table 2 and Supplementary Table S16 (computational cost of ProBiS, G-LoSA, DeeplyTough,
+"""Timing runs behind main-text Table 2 and Supplementary Table S17 (computational cost of ProBiS, G-LoSA, DeeplyTough,
 Folddisco and LEN-Seek).
 
 All tools search the same queries (a random sample of the evaluation queries: --n-queries 20, --seed 0) against the
 whole database on one node with --threads 16 cores (DeeplyTough: its pipeline on one core, the network and the search
-also timed on 16); times are wall-clock per query. analysis/table2_cost.py builds Table 2 and Supplementary Table S16
+also timed on 16); times are wall-clock per query. analysis/table2_cost.py builds Table 2 and Supplementary Table S17
 from the files written here (OUT = --out, default $LENSEEK_OUT/timing):
 
   probis-prep   ProBiS preprocessing: -extract a surface (.srf) of every database site (--threads processes), the

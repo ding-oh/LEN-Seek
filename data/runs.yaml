@@ -82,6 +82,14 @@ runs:
   # `lenseek-featurize --node-features onehot` (113,830 sites: the 831 sites without a pocket file in BsitePDB are
   # missing).
   abl_onehot: {data: '${LENSEEK_HOME}/assets/train_features_onehot', train: {batch_size: 32}}
+  # the 2 x 2 of node features and geometry (Supplementary Table S15): the one-hot runs with the decoder
+  # reconstructing the raw input node features (non-adapted target, as abl_nonadapted), with the geometry of the main
+  # recipe and without it (as abl_ankh_fullgraph_na); the training sites of abl_onehot
+  abl_onehot_na: {data: '${LENSEEK_HOME}/assets/train_features_onehot', model: {nonadapted: true}}
+  abl_onehot_fullgraph_na:
+    data: '${LENSEEK_HOME}/assets/train_features_onehot'
+    model: {edge_drop: [rbf, dir, quat], fullgraph: true, nonadapted: true}
+    train: {w_fape: 0.0, w_rmsd: 0.0}
 
   # ---- without the ligand filters: the main recipe on the 114,661 training sites plus the 34,976 sites that only
   # lenseek.exclusion.valid_ligand removes (149,637 sites; feature store from scripts/filter_free_data.py sites, build).

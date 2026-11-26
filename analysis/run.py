@@ -18,7 +18,8 @@ Environment:
   LENSEEK_OUT              outputs and the intermediate files of scripts/ (default ./out)
   LENSEEK_EVAL_DIR         evaluation outputs of LEN-Seek (asset eval_main_s0; scripts/evaluate.py)
   LENSEEK_EVAL_ROOT        folders out_<run>/ of the variants, the seeds and the model trained without the ligand
-                           filters (scripts/evaluate.py)
+                           filters (scripts/evaluate.py); a run whose folder is not there is read from the asset that
+                           holds it (EVAL_FROM_ASSETS: the two one-hot models of Supplementary Table S15)
   LENSEEK_PAIRS            scored top-100 pairs of LEN-Seek (scripts/labels.py tables)
   LENSEEK_SCAN_DIR, LENSEEK_GLOSA_SCAN_DIR, LENSEEK_PAIRS_DIR   database-wide ProBiS and G-LoSA scans and their site
                            lists (scripts/labels.py)
@@ -33,7 +34,7 @@ Environment:
                            $LENSEEK_OUT/baselines)
   LENSEEK_NA_EVAL_DIR, LENSEEK_NA_PAIRS   evaluation outputs and scored pairs of the Non-adapted Model
   LENSEEK_CKPT, LENSEEK_RECON_DATA        LEN-Seek checkpoint and reconstruction set (figS3)
-  LENSEEK_TIMING_CPU, LENSEEK_TIMING_GPU, LENSEEK_TIMING_DT   timing runs of Table 2 and Supplementary Table S16 when
+  LENSEEK_TIMING_CPU, LENSEEK_TIMING_GPU, LENSEEK_TIMING_DT   timing runs of Table 2 and Supplementary Table S17 when
                            they are not in $LENSEEK_OUT/timing (scripts/timing.py; the CPU folder holds the Folddisco
                            timing too)
   LENSEEK_FILTER_SETS      query sets of the retraining readout (default $LENSEEK_OUT/filter_retrain/sets)
@@ -53,7 +54,8 @@ it below $LENSEEK_HOME/assets/ (FROM_ASSETS below; lenseek/configs/assets.yaml):
 tables and strata searches of the release, and the labels, comparison-method outputs, timing logs, scoring outputs
 of the binding sites from later PDB entries, derived tables and BsitePDB structures of the data records. The
 intermediate files read from $LENSEEK_OUT (below) that are missing there are copied from the derived tables
-(OUT_FROM_DERIVED), file by file, so that nothing is written into the asset.
+(OUT_FROM_DERIVED; the degeneracy checks of the two one-hot models from asset eval_onehot_2x2), file by file, so that
+nothing is written into the asset.
 Intermediate files read from $LENSEEK_OUT: cache/site_annot/ (scripts/site_annotation.py), site_annotation/
 (protein_strata.tsv and query_strata.csv of scripts/site_annotation.py identity-strata and strata), cache/pfam/ (SIFTS
 and Pfam tables when $LENSEEK_REFERENCE_DIR/pfam/ is absent), database_scan/ (scripts/database_scan.py), timing/
@@ -103,6 +105,11 @@ FROM_ASSETS = {                                     # variable: (asset, path ins
 }
 OUT_FROM_DERIVED = ("cache/site_annot", "site_annotation", "database_scan", "timing/dt_prep.csv", "labels/null",
                     "holdout/mm", "holdout/seqs", "ablations")   # paths below $LENSEEK_OUT and the derived tables
+# the evaluation outputs (eval/out_<run>/) and degeneracy checks (ablations/<run>/) of the two one-hot models of
+# Supplementary Table S15 are in asset eval_onehot_2x2
+EVAL_FROM_ASSETS = {"abl_onehot_na": "eval_onehot_2x2", "abl_onehot_fullgraph_na": "eval_onehot_2x2"}
+OUT_FROM_ONEHOT = ("ablations",)                    # paths below $LENSEEK_OUT and that asset
+EVAL_DIRS = {}                                      # run: its out_<run>/ in the fetched asset
 
 
 def assets_to_env():
@@ -130,18 +137,23 @@ def assets_to_env():
         path = None if os.environ.get(v) else unpacked(asset, sub)
         if path:
             os.environ[v] = path
-    derived, copied = unpacked("derived_tables"), 0
-    for rel in OUT_FROM_DERIVED if derived else ():
-        src = os.path.join(derived, rel)
-        files = [src] if os.path.isfile(src) else [os.path.join(d, f) for d, _, fs in os.walk(src) for f in fs]
-        for f in files:
-            dst = os.path.join(os.path.abspath(os.environ.get("LENSEEK_OUT") or "out"), os.path.relpath(f, derived))
-            if not os.path.exists(dst):
-                os.makedirs(os.path.dirname(dst), exist_ok=True)
-                shutil.copy2(f, dst)
-                copied += 1
-    if copied:
-        print(f"[run] copied {copied} intermediate files of asset derived_tables into $LENSEEK_OUT", file=sys.stderr)
+    for run, asset in EVAL_FROM_ASSETS.items():
+        path = unpacked(asset, os.path.join("eval", f"out_{run}"))
+        if path:
+            EVAL_DIRS[run] = path
+    for asset, rels in (("derived_tables", OUT_FROM_DERIVED), ("eval_onehot_2x2", OUT_FROM_ONEHOT)):
+        root, copied = unpacked(asset), 0
+        for rel in rels if root else ():
+            src = os.path.join(root, rel)
+            files = [src] if os.path.isfile(src) else [os.path.join(d, f) for d, _, fs in os.walk(src) for f in fs]
+            for f in files:
+                dst = os.path.join(os.path.abspath(os.environ.get("LENSEEK_OUT") or "out"), os.path.relpath(f, root))
+                if not os.path.exists(dst):
+                    os.makedirs(os.path.dirname(dst), exist_ok=True)
+                    shutil.copy2(f, dst)
+                    copied += 1
+        if copied:
+            print(f"[run] copied {copied} intermediate files of asset {asset} into $LENSEEK_OUT", file=sys.stderr)
 
 
 assets_to_env()
@@ -177,6 +189,12 @@ def grid(run):
     return out("fig4", run, "ligand_grid_per_query.csv")
 
 
+def eval_dir(run):
+    """out_<run>/ of $LENSEEK_EVAL_ROOT, else of the fetched asset that holds it (EVAL_FROM_ASSETS)."""
+    d = os.path.join(var("LENSEEK_EVAL_ROOT"), f"out_{run}")
+    return EVAL_DIRS[run] if run in EVAL_DIRS and not os.path.exists(os.path.join(d, "dist.npy")) else d
+
+
 STRICT30_EXCLUDED = ["--db-entries", os.path.join(os.path.dirname(HERE), "data", "strict30_exclude_entries.txt")]
 
 
@@ -206,6 +224,8 @@ HOLDOUT = dict(run=ENV("LENSEEK_HOLDOUT_RUN") or out("holdout", "run"),
                                                            "pairs_union_for_labels.scored.tsv"),
                thresholds=ENV("LENSEEK_HOLDOUT_THRESHOLDS") or out("holdout_score", "thresholds"),
                manifest=ENV("LENSEEK_HOLDOUT_MANIFEST") or out("holdout", "manifest.tsv"))
+FACTORIAL_DIST = [os.path.join(eval_dir(r), "dist.npy") for r in EVAL_FROM_ASSETS]
+FETCH_HINT = {f: EVAL_FROM_ASSETS[r] for r, f in zip(EVAL_FROM_ASSETS, FACTORIAL_DIST)}   # missing file: its asset
 NOTES = []
 
 
@@ -213,11 +233,13 @@ def ablation_steps():
     """Per run with out_<run>/ in $LENSEEK_EVAL_ROOT: latent-collapse check, whole-database ligand metrics,
     out-of-fold concordance in the format of Table 1 (non-collapsed runs); then the sites common to the language-model
     variants, the same concordance of each run restricted to them and the rows of Supplementary Table S14. Outputs that
-    exist are reused."""
+    exist are reused. The runs of group factorial are those of the factorial result."""
     sys.path.insert(0, HERE)
     from common import RUNS
     root = var("LENSEEK_EVAL_ROOT")
-    for run, *_ in RUNS:
+    for run, _, _, group, _ in RUNS:
+        if group == "factorial":
+            continue
         ev = os.path.join(root, f"out_{run}")
         if not os.path.exists(os.path.join(ev, "dist.npy")):
             NOTES.append(f"ablations: {run} has no {ev}/dist.npy")
@@ -238,6 +260,26 @@ def ablation_steps():
             yield "table1_concordance.py", ["table1", "--eval-dir", d, "--out", out("table1", run), "--repeats", "0",
                                             "--strata-methods", "none"]
     yield "ablations.py", ["table"]
+
+
+def factorial_steps():
+    """Per model of Supplementary Table S15 and per seed of the original model, as in ablation_steps (outputs that
+    exist are reused): latent-collapse check (the models), whole-database ligand metrics, out-of-fold concordance in
+    the format of Table 1; then the values and differences of the table."""
+    sys.path.insert(0, HERE)
+    from common import FACTORIAL
+    models = [r for r, *_ in FACTORIAL]
+    for run in models + ["main_s0", "main_s1", "main_s2"]:
+        ev = eval_dir(run)
+        if run in models and not os.path.exists(out("ablations", run, "degeneracy.json")):
+            yield "ablations.py", ["check", "--eval-dir", ev, "--tag", run]
+        if not os.path.exists(out("fig4", run, "ligand_grid_summary.csv")):
+            yield "fig4_ligand.py", ["grid", "--eval-dir", ev]
+        if not os.path.exists(out("table1", run, "top1_oof.csv")):
+            yield "table1_concordance.py", ["table1", "--eval-dir", ev, "--out", out("table1", run), "--repeats", "0",
+                                            "--strata-methods", "none"]
+    yield "factorial.py", sum([["--model", f"{r}={eval_dir(r)}"] for r in models], []) + \
+        sum([["--seed", f"{s}={eval_dir(s)}"] for s in ("main_s1", "main_s2")], []) + FD_DIRS
 
 
 def filter_steps():
@@ -385,7 +427,7 @@ RESULTS = [
       "LENSEEK_BSDB_ROOT"],
      [out("table1", f) for f in ("threshold_cv.csv", "thresholds.csv")] + ANNOT +
      [out("cache", "site_annot", f) for f in ("db_chains.fasta", "eval_vs_db_sens.m8")], [("FOLDSEEK", "foldseek")]),
-    ("table2", "Table 2 (per-query cost), its caption values and the break-even query count; Supplementary Table S16 "
+    ("table2", "Table 2 (per-query cost), its caption values and the break-even query count; Supplementary Table S17 "
      "and Section S9",
      table2_steps, [], [TIMING["cpu"], TIMING["gpu"], TIMING["dt"], out("timing", "dt_prep.csv")], []),
     ("ablations", "Supplementary Table S14 and Section S7 (variants, sites common to the language-model variants); "
@@ -393,11 +435,16 @@ RESULTS = [
      "training (Section S5)",
      ablation_steps, ["LENSEEK_EVAL_ROOT", "LENSEEK_SCAN_DIR", "LENSEEK_PAIRS_DIR", "LENSEEK_DT_DIR",
                       "LENSEEK_STRAT_DIR", "LENSEEK_REFERENCE_DIR"], ANNOT + PFAM + ID_STRATA, []),
+    ("factorial", "Supplementary Table S15 and Section S7 (node features and geometry in trained models: the 2 x 2 of "
+     "Ankh or one-hot node features by geometry, its values and active latent units, differences and interaction)",
+     factorial_steps, ["LENSEEK_EVAL_DIR", "LENSEEK_EVAL_ROOT", "LENSEEK_SCAN_DIR", "LENSEEK_GLOSA_SCAN_DIR",
+                       "LENSEEK_PAIRS_DIR", "LENSEEK_DT_DIR", "LENSEEK_STRAT_DIR", "LENSEEK_REFERENCE_DIR"],
+     ANNOT + PFAM + ID_STRATA + FD_DIST + FACTORIAL_DIST, []),
     ("filter-retrain", "Supplementary Section S1, model trained without the ligand filters: queries with filtered "
      "ligands against the others, and the difference in differences",
      filter_steps, ["LENSEEK_EVAL_DIR"], [grid("main_s0")], []),
-    ("table3", "Supplementary Table S15 and the values of Section S8 (single-vector and two-stage retrieval, larger "
-     "databases, ligand-similar fraction of the two-stage search); two-stage row of Table S16 and the two-stage "
+    ("table3", "Supplementary Table S16 and the values of Section S8 (single-vector and two-stage retrieval, larger "
+     "databases, ligand-similar fraction of the two-stage search); two-stage row of Table S17 and the two-stage "
      "search of the main text (Computational Efficiency)",
      [("table3_two_stage.py", scaling_dirs())], ["LENSEEK_EVAL_DIR", "LENSEEK_QUERY_ROOT", "LENSEEK_REFERENCE_DIR"],
      [os.path.join(ENV("LENSEEK_SCALING_DIR") or out("scaling"), "real", "recall_per_query.csv.gz")], []),
@@ -418,7 +465,8 @@ def missing_inputs(name):
             miss.append(f"${v} not set" + (f" (or lenseek-fetch {FROM_ASSETS[v][0]})" if v in FROM_ASSETS else ""))
         elif not os.path.exists(ENV(v)):
             miss.append(f"${v}={ENV(v)} does not exist")
-    miss += [f"{f} does not exist" for f in files if not os.path.exists(f)]
+    miss += [f"{f} does not exist" + (f" (or lenseek-fetch {FETCH_HINT[f]})" if f in FETCH_HINT else "")
+             for f in files if not os.path.exists(f)]
     for v, default in exes:
         exe = ENV(v) or default
         if not shutil.which(exe):

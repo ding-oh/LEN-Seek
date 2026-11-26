@@ -52,9 +52,12 @@ PAPER_RUNS = {
     "plm_esmc": {"data": "train_features_esmc", "model": {"node_dim": 960}, "train": PLM},
     "plm_none": {"model": {"node_const": True}, "train": {**PLM, "w_mse": 0.0, "w_cos": 0.0, "w_norm": 0.0}},
     "abl_onehot": {"data": "train_features_onehot", "train": {"batch_size": 32}},
+    "abl_onehot_na": {"data": "train_features_onehot", "model": {"nonadapted": True}},
+    "abl_onehot_fullgraph_na": {"data": "train_features_onehot",
+                                "model": {"edge_drop": G3, "fullgraph": True, "nonadapted": True}, "train": NO_GEOM},
     "filter_free_s0": {"data": "train_features_filter_free"},
 }
-RESOLVED_SHA256 = "7a06e79cb0828eac265672583c90fd332dc5b8a8393ece31338ea585cf06b269"
+RESOLVED_SHA256 = "9b3d37e720f0d72f6ac34ac47331066365d3555424c2f0f6f0fc0b3e5c9d10b1"
 
 
 def resolved(name):

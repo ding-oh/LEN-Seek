@@ -1,6 +1,6 @@
 #!/bin/bash
-# Larger databases: the single-vector baselines (Supplementary Table S15 A), the two-stage search on databases from the
-# database to 10^7 sites (recall, time, memory: Supplementary Section S8 and Table S15 B) and the
+# Larger databases: the single-vector baselines (Supplementary Table S16 A), the two-stage search on databases from the
+# database to 10^7 sites (recall, time, memory: Supplementary Section S8 and Table S16 B) and the
 # tables. A feasibility measurement, not a search mode of the package.
 #
 # Produces  $LENSEEK_OUT/single_vector/      cache/ (residue CSR, full-search top 1,000), exact_scan.tsv, pooling.tsv,
@@ -32,7 +32,7 @@
 #                                               #   index at 1 thread (candidate lists checked against accuracy's) and
 #                                               #   16 threads, exhaustive scan
 #   bash examples/scaling.sh gpu                # exhaustive scan on one GPU
-#   bash examples/scaling.sh table3             # Table S15, ligand fraction (= python analysis/run.py table3)
+#   bash examples/scaling.sh table3             # Table S16, ligand fraction (= python analysis/run.py table3)
 # db: real real150k chim3e5 chim1e6 chim1e7 copy1e6 copy1e7 (default all)
 set -euo pipefail
 if [ $# -lt 1 ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then sed -n '2,36p' "$0"; exit 2; fi

@@ -9,7 +9,7 @@
 #   bash examples/analysis.sh query-sets         # data/query_sets/ again (query set, sequence clusters)
 #   bash examples/analysis.sh pfam               # SIFTS chain-to-Pfam and Pfam clan tables, downloaded (read only
 #                                                #   when $LENSEEK_REFERENCE_DIR/pfam/ is absent)
-#   bash examples/analysis.sh timing STEP        # one timing run of Table 2 and Supplementary Table S16: probis-prep,
+#   bash examples/analysis.sh timing STEP        # one timing run of Table 2 and Supplementary Table S17: probis-prep,
 #                                                #   probis, glosa, lenseek-cpu, lenseek-gpu, prep-cpu, prep-gpu,
 #                                                #   deeplytough, dt-net, dt-search, dt-prep, folddisco (16 cores;
 #                                                #   *-gpu on a GPU; examples/timing.sh runs the CPU steps one after
@@ -24,13 +24,13 @@
 #           $LENSEEK_OUT/site_annotation/query_sets/; pfam: $LENSEEK_OUT/cache/pfam/; timing: $LENSEEK_OUT/timing/;
 #           the results: one folder per result below $LENSEEK_OUT (default out/ in the repository):
 #           database_derivation/, table1/, score_agreement/, fig4/<model>/, model_figures/, cases/,
-#           table2/, ablations/, filter_retrain/, table3_two_stage/, holdout_score/, ...
+#           table2/, ablations/, factorial/, filter_retrain/, table3_two_stage/, holdout_score/, ...
 # Inputs    see `python analysis/run.py -h` for the results and the docstrings of the scripts that inputs, query-sets
 #           and timing run; read here: LENSEEK_CKPT (timing lenseek-*, prep-*), DT_PYTHON (deeplytough, dt-net,
 #           dt-search), DT_RUNS (dt-prep) and FOLDDISCO (folddisco; the rewritten files of examples/labels.sh
 #           fd-prepare). pfam: SIFTS is updated weekly; the copy in $LENSEEK_REFERENCE_DIR/pfam/
 #           is the one the results used. labels.sh, holdout.sh and scaling.sh produce the inputs of the label-based
-#           results, the results of the binding sites from later PDB entries and Supplementary Table S15; results
+#           results, the results of the binding sites from later PDB entries and Supplementary Table S16; results
 #           whose inputs are missing are skipped.
 set -euo pipefail
 cd "$(dirname "$0")/.."

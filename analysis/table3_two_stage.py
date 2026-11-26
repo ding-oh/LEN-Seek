@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-"""Supplementary Table S15 (single-vector and two-stage retrieval), the two-stage values of the main text, of
-Supplementary Section S8 and of Table S16, and the ligand-similar fraction of the two-stage search (Section S8), from
+"""Supplementary Table S16 (single-vector and two-stage retrieval), the two-stage values of the main text, of
+Supplementary Section S8 and of Table S17, and the ligand-similar fraction of the two-stage search (Section S8), from
 the outputs of scripts/scaling.py and scripts/single_vector.py.
 
 Writes to $LENSEEK_OUT/table3_two_stage/:
@@ -20,8 +20,8 @@ Writes to $LENSEEK_OUT/table3_two_stage/:
                        encoding run of the filtered sites (encode_time.json of scripts/evaluate.py --added) x 2x10^8
   gpu_exact.csv        exhaustive scan on one GPU
   table3.csv           real database, 10^6 and 10^7 chimeras; nprobe 16, K' = 1,000
-  tableS9_A.csv        Table S15 A: single-vector and residue indexes on the search database (scripts/single_vector.py)
-  tableS9_B.csv        Table S15 B: every database, exhaustive scan and two-stage search at K' = 1,000 and 3,000
+  tableS9_A.csv        Table S16 A: single-vector and residue indexes on the search database (scripts/single_vector.py)
+  tableS9_B.csv        Table S16 B: every database, exhaustive scan and two-stage search at K' = 1,000 and 3,000
   ligand_ratio.csv, ligand_<db>_per_query.csv   real and real150k: per primary query with ligand-similar and
                        dissimilar database sites, the ligand-similar fraction of the top 10 of the exhaustive scan and of
                        the two-stage search (exact re-rank of the first 1,000 candidates), sites without a ligand

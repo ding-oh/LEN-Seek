@@ -8,9 +8,12 @@ in $LENSEEK_OUT/cache/; the identity, structure and ligand strata of the evaluat
 $LENSEEK_OUT/site_annotation/), LENSEEK_REFERENCE_DIR (asset reference_data; default: where lenseek-fetch unpacks it)
 and LENSEEK_BASELINE_DIR (default $LENSEEK_OUT/baselines); the query sets and sequence clusters are read from
 data/query_sets/.
+The readers of the per-run outputs of the variants and the per-query ProBiS comparison on the common pair set serve
+ablations.py, baselines.py and factorial.py.
 """
 import collections
 import gzip
+import json
 import os
 import sys
 
@@ -719,8 +722,158 @@ def ligand_tables():
     return qcode, dcode, dice
 
 
+# ---------------------------------------------------------------- per-run outputs of the variants
+PATHS = dict(eval_root=os.environ.get("LENSEEK_EVAL_ROOT") or os.path.join(OUT_ROOT, "eval"),
+             fig=os.path.join(OUT_ROOT, "fig4"), t1=os.path.join(OUT_ROOT, "table1"),
+             out=os.path.join(OUT_ROOT, "ablations"), common=os.path.join(OUT_ROOT, "ablations", "common_sites_eval"),
+             strata=PROTEIN_STRATA)
+
+
+def grid_file(run, name="ligand_grid_per_query.csv"):
+    """A whole-database ligand-metrics file of the run (fig4_ligand.py grid)."""
+    return os.path.join(PATHS["fig"], run, name)
+
+
+def t1_dir(run):
+    """The run's out-of-fold Table 1 folder (table1_concordance.py table1 --out)."""
+    return os.path.join(PATHS["t1"], run)
+
+
+def t1_row(run):
+    """LEN-Seek top-1 row (k = 1) of the run's table1A.csv, or None."""
+    f = os.path.join(t1_dir(run), "table1A.csv")
+    if not os.path.exists(f):
+        return None
+    t = pd.read_csv(f)
+    t = t[(t.method == LENSEEK) & (t.k == 1)]
+    return t.iloc[0] if len(t) else None
+
+
+def deg_state(run):
+    """('ok' | 'degenerate' | 'unchecked', degeneracy.json or None); an unchecked run is treated as degenerate."""
+    f = os.path.join(PATHS["out"], run, "degeneracy.json")
+    if not os.path.exists(f):
+        return "unchecked", None
+    try:
+        with open(f) as fh:
+            j = json.load(fh)
+        au = int(j["au"])
+    except (OSError, ValueError, KeyError, TypeError):
+        return "unchecked", None
+    return ("degenerate" if au == 0 else "ok"), j
+
+
+def usable(t):
+    """Queries with a ligand fingerprint, at least one ligand-similar and one other database site."""
+    return t[t.has_query_fp & (t.n_pos > 0) & (t.n_pos < t.n_db)]
+
+
+def top1_mcc(t, p):
+    """MCC of boolean truth t and prediction p."""
+    return mcc((t & p).sum(), (~t & p).sum(), (t & ~p).sum(), (~t & ~p).sum())
+
+
+def oof_top1(run):
+    """Per-query out-of-fold top-1 outcome (query_key, protein, cluster, fold, truth, pred) from top1_oof.csv of
+    table1_concordance.py table1; its top-1 MCC must equal the LEN-Seek k = 1 row of table1A.csv."""
+    f = os.path.join(t1_dir(run), "top1_oof.csv")
+    r1 = t1_row(run)
+    if not os.path.exists(f) or r1 is None:
+        return None
+    top1 = pd.read_csv(f, dtype={"query_key": str, "protein": str, "cluster": str})
+    ok = np.isfinite(top1.truth)
+    m = top1_mcc(top1.truth[ok].astype(bool).to_numpy(), top1.pred[ok].astype(bool).to_numpy())
+    if abs(m - r1["MCC"]) > 1e-9:
+        die(f"{run}: top-1 MCC of top1_oof.csv {m} != table1A.csv {r1['MCC']}")
+    return top1[ok][["query_key", "protein", "cluster", "fold", "truth", "pred"]]
+
+
+FRAME_STRATA = [("all", None), ("<30", {"<30"}), (">=30", {"30-40", "40-50", "50-80", "80-95", ">=95"})]
+
+
+# ---------------------------------------------------------------- ProBiS comparison on the common pair set
+BASELINES = ["seqid", "random"]
+RANDOM_SEED = 0
+Z_THR, GA_THR, FOLDS = 2.0, 0.59, 5
+LS_STEP, BL_STEP, DT_STEP = 0.5, 0.001, 0.0001
+G = {}
+
+
+class Baselines:
+    def __init__(self, ev):
+        self.ev = ev
+        self.n_db = len(ev.db_keys)
+        self.H = Homology(ev.q_keys, ev.db_keys)
+
+    def ranking(self, qi, names=BASELINES):
+        """{baseline: score of every database site for query qi}."""
+        out = {}
+        for n in names:
+            if n == "seqid":
+                out[n] = self.H.identity(qi)
+            elif n == "random":
+                out[n] = np.random.default_rng(np.random.SeedSequence([RANDOM_SEED, int(qi)])).random(self.n_db)
+            else:
+                raise KeyError(n)
+        return out
+
+
+def probis_query(qi):
+    """Per-query ProBiS ROC-AUC of every method on the common pair set and its top-1 (d, label, db_idx); r['glosa']:
+    the same with the G-LoSA labels."""
+    g = G
+    st = np.asarray(g["status"][qi])
+    raw = np.asarray(g["raw"][qi], dtype=np.float64)
+    key = g["q_keys"][qi]
+    r = dict(q_idx=int(qi), query_key=key, protein=protein_of(key), n_pending=int((st == 0).sum()))
+    if r["n_pending"]:
+        r["excluded"] = "pending pairs"
+        return r, None
+    z = np.round((raw - 1.958) / 2.21468, 2)
+    lab = np.full(len(st), np.nan)
+    lab[st == 1] = (z[st == 1] >= Z_THR).astype(float)
+    lab[st == 2] = 0.0
+    scored = np.isfinite(lab)
+    sc, ties, dists = {}, {}, {}
+    for name, D in g["ls"].items():
+        d = np.asarray(D[qi], dtype=np.float64)
+        sc[name], ties[name], dists[name] = -d, g["dbidx"], d
+    dd = np.asarray(g["dt"][qi], dtype=np.float64)
+    sc["deeplytough"], ties["deeplytough"], dists["deeplytough"] = -dd, g["dbidx"], dd
+    for name, D in g.get("extra", {}).items():
+        dx = np.asarray(D[qi], dtype=np.float64)
+        sc[name], ties[name], dists[name] = -dx, g["dbidx"], dx
+    tie = tie_key(qi, g["n_db"])
+    for name, s in g["bl"].ranking(qi, BASELINES).items():
+        sc[name], ties[name], dists[name] = s, tie, 1.0 - s
+    finite = np.ones(len(st), bool)
+    for s in sc.values():
+        finite &= np.isfinite(s)
+    okg = (np.asarray(g["gst"][qi]) == 1) & finite
+    yg = np.asarray(g["ga"][qi], dtype=np.float64)[okg] >= GA_THR
+    r["glosa"] = dict(n_db=int(okg.sum()), n_pos=int(yg.sum()))
+    if 0 < yg.sum() < len(yg):
+        r["glosa"].update({f"{name}__auc": mw_auc(s[okg], yg) for name, s in sc.items()})
+    ok = scored & finite
+    y = np.where(scored, lab, 0).astype(bool)[ok]
+    r.update(n_db=int(ok.sum()), n_failed=int((~scored).sum()), n_unscorable_method=int((scored & ~finite).sum()),
+             n_pos=int(y.sum()))
+    if not (0 < r["n_pos"] < r["n_db"]):
+        r["excluded"] = "no positive" if r["n_pos"] == 0 else "no negative"
+        return r, None
+    r["excluded"] = ""
+    idx = np.nonzero(ok)[0]
+    top1 = {}
+    for name, s in sc.items():
+        r[f"{name}__auc"] = mw_auc(s[ok], y)
+        o = np.lexsort((ties[name][ok], -s[ok]))[0]
+        top1[name] = (float(dists[name][idx[o]]), int(y[o]), int(idx[o]))
+    return r, top1
+
+
 # ---------------------------------------------------------------- training runs of the variant table
-RUNS = [  # run, node features, training sites, group, row label of Supplementary Table S14
+RUNS = [  # run, node features, training sites, group, row label of Supplementary Table S14 (group factorial:
+          # models of Supplementary Table S15 only, with its column label)
     ("main_s0", "ankh", 114661, "seed", "Original model (seed 0)"),
     ("main_s1", "ankh", 114661, "seed", "Original model, seed 1"),
     ("main_s2", "ankh", 114661, "seed", "Original model, seed 2"),
@@ -731,6 +884,8 @@ RUNS = [  # run, node features, training sites, group, row label of Supplementar
     ("plm_esmc", "esmc", 113812, "language_model", "ESM C node features"),
     ("plm_none", "none", 114661, "language_model", "No node features (structure only)"),
     ("abl_onehot", "onehot", 113830, "auxiliary", "One-hot residue type"),
+    ("abl_onehot_na", "onehot", 113830, "factorial", "One-hot, geometry"),
+    ("abl_onehot_fullgraph_na", "onehot", 113830, "factorial", "One-hot, no geometry"),
     ("abl_ankh_fullgraph", "ankh", 114661, "structure", "Ankh only, fully connected"),
     ("abl_ankh_fullgraph_na", "ankh", 114661, "structure", "Ankh only, fully connected, raw Ankh target"),
     ("abl_ankh_only", "ankh", 114661, "auxiliary", "No geometric edges, 15-NN graph"),
@@ -744,6 +899,12 @@ RUNS = [  # run, node features, training sites, group, row label of Supplementar
     ("abl_nonadapted", "ankh", 114661, "structure", "Non-adapted Model (raw 768-d Ankh target)"),
     ("abl_stopgrad", "ankh", 114661, "auxiliary", "Adapted target detached"),
     ("filter_free_s0", "ankh", 149637, "auxiliary", "Trained without the ligand filters"),
+]
+FACTORIAL = [  # the 2 x 2 of Supplementary Table S15: run, node features, geometry
+    ("abl_nonadapted", "Ankh", "geometry"),
+    ("abl_ankh_fullgraph_na", "Ankh", "no geometry"),
+    ("abl_onehot_na", "one-hot", "geometry"),
+    ("abl_onehot_fullgraph_na", "one-hot", "no geometry"),
 ]
 
 

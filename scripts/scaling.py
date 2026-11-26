@@ -1,5 +1,5 @@
 """Two-stage search on databases of increasing size: candidates, recall, time and memory (Supplementary Section S8 and
-Table S15 B; analysis/table3_two_stage.py makes the tables and the ligand-similar fraction
+Table S16 B; analysis/table3_two_stage.py makes the tables and the ligand-similar fraction
 of the two-stage top 10 from the candidate lists).
 
 A feasibility measurement: the package itself searches by an exhaustive Chamfer scan. Stage 1: every query residue

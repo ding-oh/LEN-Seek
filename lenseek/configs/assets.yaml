@@ -167,7 +167,7 @@ assets:
     source: scripts/deeplytough.py, scripts/folddisco.py, scripts/baseline_features.py (examples/labels.sh)
 
   timing_logs:
-    description: per-query timings of Table 2 and Supplementary Table S16 - CPU runs with the Folddisco timing (cpu/),
+    description: per-query timings of Table 2 and Supplementary Table S17 - CPU runs with the Folddisco timing (cpu/),
       GPU runs (gpu/), DeeplyTough (dt/); LENSEEK_TIMING_CPU, LENSEEK_TIMING_GPU, LENSEEK_TIMING_DT
     file: lenseek_timing_logs.tar
     size: 3665920
@@ -207,3 +207,16 @@ assets:
     root: derived
     source: scripts/evaluate.py, scripts/site_annotation.py, scripts/database_scan.py, scripts/scaling.py,
       scripts/single_vector.py, scripts/holdout.py, scripts/labels.py null (examples/*.sh)
+
+  eval_onehot_2x2:
+    description: evaluation outputs (eval/out_<run>/) and degeneracy checks (ablations/<run>/) of the two one-hot
+      models of Supplementary Table S15, abl_onehot_na and abl_onehot_fullgraph_na, in the layout of derived_tables;
+      analysis/run.py reads a run from it when $LENSEEK_EVAL_ROOT has no out_<run>/
+    file: lenseek_eval_onehot_2x2.tar
+    size: 465295360
+    sha256: 3be9a197cd938a72952f6aeca1de76e0b44ce6984287a0a4a39441a17eb87cde
+    url: https://zenodo.org/records/24491227/files/lenseek_eval_onehot_2x2.tar?download=1
+    license: CC-BY-4.0
+    kind: tar
+    root: derived
+    source: scripts/evaluate.py, analysis/ablations.py check

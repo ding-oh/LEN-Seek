@@ -1,5 +1,5 @@
 #!/bin/bash
-# The CPU timing runs of Table 2 and Supplementary Table S16 on one node that runs no other job: the ProBiS surface
+# The CPU timing runs of Table 2 and Supplementary Table S17 on one node that runs no other job: the ProBiS surface
 # extraction of the database on its own (the ProBiS preprocessing time), ProBiS, G-LoSA, LEN-Seek per query, the
 # LEN-Seek preprocessing of 500 random database entries, DeeplyTough (its pipeline per query, the network alone, the
 # search) and
@@ -7,7 +7,7 @@
 # is allocated whole (--exclusive) and each part is confined with taskset to the first 16 CPUs of the allocation, the
 # cores a 16-CPU job gets on an idle node, so process pools, OpenMP / BLAS and JVMs see 16 cores. The parts are the
 # steps of examples/analysis.sh timing; its GPU steps (lenseek-gpu, prep-gpu, on a GPU node) and dt-prep complete the
-# inputs of Table 2 and Table S16 (python analysis/run.py table2).
+# inputs of Table 2 and Table S17 (python analysis/run.py table2).
 #
 #   sbatch examples/timing.sh        # from the repository root; add site options (partition, CPU type) to the line
 #

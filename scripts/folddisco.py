@@ -12,7 +12,7 @@ Runs: one Folddisco process per query; every database site gets a ranking key d 
   prefilter  index of the database pocket files, one structure per site; the query pocket file searched with all its
              residues, pre-filter only (--skip-match --per-structure). Score idf (IDF-weighted coverage with a length
              penalty), d = -(idf + 1e-7 node_count): ties go to more matched query residues, then to the lower
-             database index. Supplementary Tables S8, S9, S10, S13 and S16.
+             database index. Supplementary Tables S8, S9, S10, S13 and S17.
   matching   the same index and queries with residue matching after the pre-filter: d = -structure_score + 1e-7
              min(min_rmsd, 999).
   blosum62   as prefilter, with every residue Folddisco reads from the query file listed (-q) and --aa-subst blosum62.

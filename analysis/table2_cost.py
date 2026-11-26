@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Main-text Table 2 and Supplementary Table S16 (computational cost of ProBiS, G-LoSA, DeeplyTough, Folddisco and
+"""Main-text Table 2 and Supplementary Table S17 (computational cost of ProBiS, G-LoSA, DeeplyTough, Folddisco and
 LEN-Seek; Supplementary Section S9) from the timing runs.
 
 Reads the files written by scripts/timing.py and writes one row per (tool, quantity):

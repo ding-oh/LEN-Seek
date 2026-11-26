@@ -32,7 +32,7 @@ database features are in the data record (asset `train_features`); the query cac
 the evaluation queries (asset `eval_queries`). The checkpoints of the other variants (the node-feature variants, the
 model trained without homologous entries at 50 % identity and the model trained without the ligand filters) are not
 released; `data/runs.yaml` trains each of them, and their evaluation outputs are in the LEN-Seek data record (asset
-`derived_tables`).
+`derived_tables`; the two one-hot models of Supplementary Table S15, asset `eval_onehot_2x2`).
 
 The released latent-space dataset (`latentdb_main_s0`, 2.8 GB, and its standard-edition patch
 `latentdb_main_s0_standard`) is the 114,661 database sites encoded with `main_s0`; `lenseek-search` uses it by default.
